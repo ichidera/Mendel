@@ -1,0 +1,4 @@
+# CODEOWNERS: specify team or users responsible for parts of the repo
+# Example:
+# /architecture/ @org/arch-team
+* @your-github-username

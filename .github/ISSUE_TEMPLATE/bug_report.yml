@@ -1,0 +1,25 @@
+name: Bug report
+about: Create a report to help us improve
+title: ""
+labels: bug
+assignees: ''
+
+body:
+  - type: markdown
+    attributes:
+      value: |-
+        Thanks for taking the time to file a bug report! Please include a short description, steps to reproduce, and expected vs actual behavior.
+  - type: input
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Be specific and include commands, inputs, or data.
+      placeholder: |
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior

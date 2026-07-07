@@ -1,0 +1,19 @@
+name: Feature request
+about: Suggest an idea for this project
+title: ""
+labels: enhancement
+assignees: ''
+
+body:
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation and expected impact
+  - type: textarea
+    id: design
+    attributes:
+      label: Proposed design
