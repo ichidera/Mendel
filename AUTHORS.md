@@ -10,8 +10,9 @@ Open a PR adding your own entry (or ask a maintainer to add it) the first time y
 
 | Name | GitHub | Contribution area |
 |---|---|---|
-| _[fill in]_ | _[@handle]_ | Project founder |
+| ichidera | @ichidera | Project founder |
+| _[fill in]_ | _[@handle]_ | role |
 
 ## A note on what counts
 
-Code isn't the only contribution that matters here. Writing an eval, catching a subtle bug in a module's README, improving the roadmap, running an experiment that failed and writing it up in `docs/` so nobody repeats it — all of that belongs on this list. If you're not sure whether your contribution qualifies, it does.
+Code isn't the only contribution that matters here. Writing an eval, catching a subtle bug in a module's README, improving the roadmap, sponsoring/funding, running an experiment that failed and writing it up in `docs/` so nobody repeats it - all of that belongs on this list. If you're not sure whether your contribution qualifies, it does.
