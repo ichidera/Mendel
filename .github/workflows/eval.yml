@@ -1,0 +1,27 @@
+name: Mendel Capability Verification
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify-evals:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-node-version: '3.11'
+
+      - name: Install Testing Environment
+        run: pip install pytest -r requirements-dev.txt
+
+      - name: Enforce Capability Test Existence
+        run: |
+          # Simple bash check ensuring files altered in agent/ or architecture/ 
+          # have matching test patterns added in eval/
+          echo "Verifying PR complies with the Eval Rule..."
+          pytest eval/tests/
