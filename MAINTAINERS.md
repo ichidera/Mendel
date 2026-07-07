@@ -6,7 +6,7 @@ Mendel is governed as a BDFL project — see `GOVERNANCE.md` for how decisions g
 
 | Name | GitHub | Scope |
 |---|---|---|
-| _[fill in]_ | _[@handle]_ | Final say project-wide; see GOVERNANCE.md |
+| ichidera | @ichidera | Final say project-wide; see GOVERNANCE.md |
 
 ## Module maintainers
 
