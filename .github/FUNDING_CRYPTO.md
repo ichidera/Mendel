@@ -4,22 +4,18 @@ This project accepts crypto donations outside of GitHub Sponsors. GitHub's `FUND
 
 ## BTC
 - Network: BTC
-- Address: `<insert BTC address>`
+- Address: `1H7BC5NSmJxZDpVf6zCaaLuB7MqwS3pE2H`
 
 ## ETH
 - Network: ERC20
-- Address: `<insert ETH (ERC20) address>`
-- Network: BSC (BEP20)
-- Address: `<insert ETH on BSC address>`
-- Network: TRC20
-- Address: `<insert ETH-equivalent TRC20 address>`
+- Address: `0x4f50fa7532a9316a4e7fe7dff4e279d290119c6f`
+- Network: BEP20
+- Address: `0x4f50fa7532a9316a4e7fe7dff4e279d290119c6f`
 
 ## BNB
 - Network: BEP20
-- Address: `<insert BNB address>`
+- Address: `0x4f50fa7532a9316a4e7fe7dff4e279d290119c6f`
 
 ## SOL
 - Network: SOLANA
-- Address: `<insert SOL address>`
-
-> Replace the placeholder addresses above with your real wallet addresses.
+- Address: `3VKPwZEWSXpEMRtjbv2jNLjqgirTZYTAQrihXwxJHrGe`
