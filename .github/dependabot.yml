@@ -1,10 +1,37 @@
 version: 2
 updates:
+  # Python — training pipeline, distillation, eval, most of the research code
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "deps(python)"
+    labels:
+      - "dependencies"
+      - "python"
+
+  # GitHub Actions — keep CI/CD workflows patched
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "deps(actions)"
+    labels:
+      - "dependencies"
+      - "ci"
+
+  # Rust — only relevant once inference/ has a Cargo.toml (low-level runtime).
+  # Left here so it activates automatically the first time that lands, rather
+  # than being forgotten and added late.
+  - package-ecosystem: "cargo"
+    directory: "/inference"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "deps(rust)"
+    labels:
+      - "dependencies"
+      - "inference"

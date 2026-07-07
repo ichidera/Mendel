@@ -1,4 +1,37 @@
-# CODEOWNERS: specify team or users responsible for parts of the repo
-# Example:
-# /architecture/ @org/arch-team
-* @your-github-username
+# CODEOWNERS
+# Review is requested automatically from the listed owner(s) when a PR touches
+# matching paths. Keep this in sync with MAINTAINERS.md — if they disagree,
+# this file is what GitHub actually enforces, so treat a mismatch as a bug.
+#
+# Until a module has a dedicated maintainer, the BDFL (@ichidera) owns it by
+# default, per GOVERNANCE.md.
+
+# Default owner — anything not matched below
+* @ichidera
+
+# Architecture
+/architecture/                 @ichidera
+/architecture/attention/       @ichidera
+/architecture/moe/             @ichidera
+
+# Training levers
+/distillation/                 @ichidera
+/quantization/                 @ichidera
+/retrieval/                    @ichidera
+
+# Agentic capability
+/agent/                        @ichidera
+/agent/tools/                  @ichidera
+/agent/skills/                 @ichidera
+/agent/cli/                    @ichidera
+/control/                      @ichidera
+
+# Evaluation, runtime, docs
+/eval/                         @ichidera
+/inference/                    @ichidera
+/docs/                         @ichidera
+
+# Project governance and process — BDFL owns these regardless of who else contributes
+/GOVERNANCE.md                 @ichidera
+/MAINTAINERS.md                 @ichidera
+/.github/                      @ichidera

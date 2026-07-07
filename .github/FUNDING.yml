@@ -1,2 +1,9 @@
-github: [your-github-username]
-open_collective: your-project
+# These are supported funding model platforms
+# github.blog/2019-12-30-announcing-github-sponsors/
+
+github: ichidera
+open_collective: MENDEL
+
+# Note: GitHub FUNDING.yml supports only recognized sponsorship platforms.
+# Custom crypto donation fields are not allowed here.
+# See .github/FUNDING_CRYPTO.md for supported wallet/network donation details.
