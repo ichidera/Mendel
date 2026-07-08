@@ -13,7 +13,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "python"))
 
 import random
-import core
+import mendel_core as core
 
 
 def build_mlp(seed=0):

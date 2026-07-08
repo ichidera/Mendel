@@ -130,3 +130,105 @@ void sgd_step(float* param, const float* grad, float lr, int n) {
         param[i] -= lr * grad[i];
     }
 }
+
+void batched_matmul_forward(const float* A, const float* B, float* out,
+                             int batch, int m, int k, int n, int transpose_b) {
+    size_t a_stride = (size_t)m * k;
+    size_t b_stride = transpose_b ? (size_t)n * k : (size_t)k * n;
+    size_t o_stride = (size_t)m * n;
+
+    for (int b = 0; b < batch; b++) {
+        const float* Ab = A + b * a_stride;
+        const float* Bb = B + b * b_stride;
+        float* Ob = out + b * o_stride;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                float acc = 0.0f;
+                for (int p = 0; p < k; p++) {
+                    float bval = transpose_b ? Bb[j * k + p] : Bb[p * n + j];
+                    acc += Ab[i * k + p] * bval;
+                }
+                Ob[i * n + j] = acc;
+            }
+        }
+    }
+}
+
+void batched_matmul_backward(const float* A, const float* B, const float* dOut,
+                              float* dA, float* dB,
+                              int batch, int m, int k, int n, int transpose_b) {
+    size_t a_stride = (size_t)m * k;
+    size_t b_stride = transpose_b ? (size_t)n * k : (size_t)k * n;
+    size_t o_stride = (size_t)m * n;
+
+    for (int b = 0; b < batch; b++) {
+        const float* Ab = A + b * a_stride;
+        const float* Bb = B + b * b_stride;
+        const float* dOb = dOut + b * o_stride;
+        float* dAb = dA + b * a_stride;
+        float* dBb = dB + b * b_stride;
+
+        /* dA[i,p] += sum_j dOut[i,j] * (transpose_b ? B[j,p] : B[p,j]) */
+        for (int i = 0; i < m; i++) {
+            for (int p = 0; p < k; p++) {
+                float acc = 0.0f;
+                for (int j = 0; j < n; j++) {
+                    float bval = transpose_b ? Bb[j * k + p] : Bb[p * n + j];
+                    acc += dOb[i * n + j] * bval;
+                }
+                dAb[i * k + p] += acc;
+            }
+        }
+
+        if (!transpose_b) {
+            /* dB[p,j] += sum_i A[i,p] * dOut[i,j]  -- dB shape (k,n) */
+            for (int p = 0; p < k; p++) {
+                for (int j = 0; j < n; j++) {
+                    float acc = 0.0f;
+                    for (int i = 0; i < m; i++) {
+                        acc += Ab[i * k + p] * dOb[i * n + j];
+                    }
+                    dBb[p * n + j] += acc;
+                }
+            }
+        } else {
+            /* dB[j,p] += sum_i dOut[i,j] * A[i,p]  -- dB shape (n,k) */
+            for (int j = 0; j < n; j++) {
+                for (int p = 0; p < k; p++) {
+                    float acc = 0.0f;
+                    for (int i = 0; i < m; i++) {
+                        acc += dOb[i * n + j] * Ab[i * k + p];
+                    }
+                    dBb[j * k + p] += acc;
+                }
+            }
+        }
+    }
+}
+
+void softmax_forward(const float* X, float* out, int m, int n) {
+    for (int i = 0; i < m; i++) {
+        const float* row = X + i * n;
+        float* orow = out + i * n;
+        float maxv = row[0];
+        for (int j = 1; j < n; j++) if (row[j] > maxv) maxv = row[j];
+        float sum = 0.0f;
+        for (int j = 0; j < n; j++) {
+            float e = expf(row[j] - maxv);
+            orow[j] = e;
+            sum += e;
+        }
+        for (int j = 0; j < n; j++) orow[j] /= sum;
+    }
+}
+
+void softmax_backward(const float* probs, const float* dOut, float* dIn, int m, int n) {
+    for (int i = 0; i < m; i++) {
+        const float* prow = probs + i * n;
+        const float* drow = dOut + i * n;
+        float* dinrow = dIn + i * n;
+        float dot = 0.0f;
+        for (int k = 0; k < n; k++) dot += drow[k] * prow[k];
+        for (int j = 0; j < n; j++) dinrow[j] += prow[j] * (drow[j] - dot);
+    }
+}

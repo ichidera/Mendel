@@ -5,13 +5,18 @@ character), trained with the hand-written C engine, no PyTorch/NumPy/JAX
 anywhere in the loop. This is deliberately NOT a transformer yet -- attention
 is a follow-up PR. The point of this script is proving the engine trains a
 real model end to end, on real (if tiny) data.
+
+Model definition lives in architecture/model.py, not here -- this script is
+a demo of training it, not the source of truth for what it is.
 """
 import sys
 import os
 import random
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "python"))
-import core  # noqa: E402
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "architecture"))
+import mendel_core as core  # noqa: E402
+from model import CharMLP, CharMLPConfig  # noqa: E402
 
 CONTEXT_SIZE = 3
 EMBED_DIM = 8
@@ -39,26 +44,14 @@ def build_dataset(corpus, stoi):
     return X, Y
 
 
-def forward_batch(table, W1, b1, W2, b2, X_idx, embed_dim, context_size):
-    embs = []
-    for pos in range(context_size):
-        idx_list = [row[pos] for row in X_idx]
-        embs.append(core.embedding(table, idx_list, embed_dim))
-    concat_emb = core.concat_last_dim(embs)
-    hidden = core.relu(core.add_bias(core.matmul(concat_emb, W1), b1))
-    logits = core.add_bias(core.matmul(hidden, W2), b2)
-    return logits
-
-
-def generate(table, W1, b1, W2, b2, stoi, itos, vocab_size, length=60, seed=1):
+def generate(model, stoi, itos, vocab_size, length=60, seed=1):
     rng = random.Random(seed)
     pad = stoi["."]
     context = [pad] * CONTEXT_SIZE
     out_chars = []
     for _ in range(length):
-        logits = forward_batch(table, W1, b1, W2, b2, [context], EMBED_DIM, CONTEXT_SIZE)
+        logits = model.forward([context])
         probs = core.softmax_probs(logits)
-        # weighted sample over the vocab-sized probability row
         r = rng.random()
         cum = 0.0
         pick = vocab_size - 1
@@ -85,21 +78,17 @@ def main():
     print(f"corpus length: {len(corpus)} chars, vocab size: {vocab_size}, "
           f"training pairs: {len(X_idx)}")
 
-    table = core.param((vocab_size, EMBED_DIM), fan_in=EMBED_DIM)
-    W1 = core.param((CONTEXT_SIZE * EMBED_DIM, HIDDEN), fan_in=CONTEXT_SIZE * EMBED_DIM)
-    b1 = core.zeros((HIDDEN,))
-    W2 = core.param((HIDDEN, vocab_size), fan_in=HIDDEN)
-    b2 = core.zeros((vocab_size,))
-    params = [table, W1, b1, W2, b2]
-    opt = core.SGD(params, lr=LR)
+    config = CharMLPConfig(vocab_size, CONTEXT_SIZE, EMBED_DIM, HIDDEN)
+    model = CharMLP(config)
+    opt = core.SGD(model.parameters(), lr=LR)
 
     print("\nbefore training, sampled generation (should look like noise):")
-    print(" ", repr(generate(table, W1, b1, W2, b2, stoi, itos, vocab_size)))
+    print(" ", repr(generate(model, stoi, itos, vocab_size)))
 
     print("\ntraining:")
     for epoch in range(1, EPOCHS + 1):
         opt.zero_grad()
-        logits = forward_batch(table, W1, b1, W2, b2, X_idx, EMBED_DIM, CONTEXT_SIZE)
+        logits = model.forward(X_idx)
         loss = core.softmax_cross_entropy(logits, Y_idx)
         loss.backward()
         opt.step()
@@ -107,8 +96,9 @@ def main():
             print(f"  epoch {epoch:4d}  loss {loss.ptr[0]:.4f}")
 
     print("\nafter training, sampled generation (should resemble the corpus):")
-    print(" ", repr(generate(table, W1, b1, W2, b2, stoi, itos, vocab_size)))
+    print(" ", repr(generate(model, stoi, itos, vocab_size)))
 
 
 if __name__ == "__main__":
     main()
+

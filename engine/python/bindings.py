@@ -54,6 +54,20 @@ _lib.embedding_backward.restype = None
 _lib.sgd_step.argtypes = [FP, FP, ctypes.c_float, ctypes.c_int]
 _lib.sgd_step.restype = None
 
+_lib.batched_matmul_forward.argtypes = [FP, FP, FP, ctypes.c_int, ctypes.c_int,
+                                          ctypes.c_int, ctypes.c_int, ctypes.c_int]
+_lib.batched_matmul_forward.restype = None
+
+_lib.batched_matmul_backward.argtypes = [FP, FP, FP, FP, FP, ctypes.c_int, ctypes.c_int,
+                                           ctypes.c_int, ctypes.c_int, ctypes.c_int]
+_lib.batched_matmul_backward.restype = None
+
+_lib.softmax_forward.argtypes = [FP, FP, ctypes.c_int, ctypes.c_int]
+_lib.softmax_forward.restype = None
+
+_lib.softmax_backward.argtypes = [FP, FP, FP, ctypes.c_int, ctypes.c_int]
+_lib.softmax_backward.restype = None
+
 
 def alloc(n):
     return _lib.mendel_alloc(n)
@@ -105,3 +119,19 @@ def embedding_backward(dTable, idx, dOut, batch, dim):
 
 def sgd_step(param, grad, lr, n):
     _lib.sgd_step(param, grad, lr, n)
+
+
+def batched_matmul_forward(A, B, out, batch, m, k, n, transpose_b):
+    _lib.batched_matmul_forward(A, B, out, batch, m, k, n, int(transpose_b))
+
+
+def batched_matmul_backward(A, B, dOut, dA, dB, batch, m, k, n, transpose_b):
+    _lib.batched_matmul_backward(A, B, dOut, dA, dB, batch, m, k, n, int(transpose_b))
+
+
+def softmax_forward(X, out, m, n):
+    _lib.softmax_forward(X, out, m, n)
+
+
+def softmax_backward(probs, dOut, dIn, m, n):
+    _lib.softmax_backward(probs, dOut, dIn, m, n)

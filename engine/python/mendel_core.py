@@ -11,6 +11,33 @@ import random
 
 import bindings
 
+# Every Tensor registers itself here on creation. Since __del__ deliberately
+# does nothing (see the note in Tensor.free below), this registry is how we
+# reclaim memory at natural step boundaries instead: call free_all_except()
+# once per training step with the tensors you need to keep (model
+# parameters), and everything else created since the last sweep gets freed.
+# See docs/decisions/0005-attention-eval-and-memory-lifecycle.md for why
+# this was necessary, not optional, once training ran longer than a few
+# hundred steps.
+_ALL_TENSORS = []
+
+
+def free_all_except(keep_tensors):
+    """Free every Tensor created since the last sweep, except those in
+    keep_tensors. Call this once per training step, after you've extracted
+    any scalar values you need (e.g. loss.ptr[0]) into plain Python floats --
+    anything still referencing a freed Tensor's buffer after this call will
+    read garbage, same hazard as the __del__ bug this design avoids."""
+    global _ALL_TENSORS
+    keep_ids = {id(t) for t in keep_tensors}
+    remaining = []
+    for t in _ALL_TENSORS:
+        if id(t) in keep_ids:
+            remaining.append(t)
+        else:
+            t.free()
+    _ALL_TENSORS = remaining
+
 
 class Tensor:
     """A buffer of floats backed by C-allocated memory, plus enough graph
@@ -27,6 +54,7 @@ class Tensor:
             self.set(fill)
         self._prev = ()
         self._backward = lambda: None
+        _ALL_TENSORS.append(self)
 
     def set(self, values):
         assert len(values) == self.n, f"expected {self.n} values, got {len(values)}"
@@ -54,8 +82,11 @@ class Tensor:
         leak memory in this Phase 1 engine than fail silently and wrong.
         Call .free() explicitly once done with a tensor, or don't bother yet
         -- this is a training-loop toy engine, not a production allocator."""
+        if getattr(self, "_freed", False):
+            return
         bindings.free(self.ptr)
         bindings.free(self.grad)
+        self._freed = True
 
     def backward(self):
         topo, visited = [], set()
@@ -209,6 +240,95 @@ def softmax_probs(logits):
     bindings.free(loss_per_row)
     bindings.free(probs)
     return result
+
+
+def batched_matmul(A, B, batch, m, k, n, transpose_b):
+    """Per-batch matmul: out[b] = A[b] @ (B[b]^T if transpose_b else B[b]).
+    A, B are flat Tensors whose buffers are interpreted with explicit batch/
+    m/k/n strides -- see tensor_ops.h for the exact layout. Used as the two
+    matmuls inside self_attention (Q@K^T and attn_weights@V)."""
+    out = Tensor((batch * m, n))
+    bindings.batched_matmul_forward(A.ptr, B.ptr, out.ptr, batch, m, k, n, transpose_b)
+    out._prev = (A, B)
+
+    def _backward():
+        bindings.batched_matmul_backward(A.ptr, B.ptr, out.grad, A.grad, B.grad,
+                                          batch, m, k, n, transpose_b)
+
+    out._backward = _backward
+    return out
+
+
+def softmax(X):
+    """Row-wise softmax, no labels -- distinct from softmax_cross_entropy,
+    which fuses softmax with the loss. Used inside attention for turning
+    scores into weights."""
+    m, n = X.shape
+    out = Tensor((m, n))
+    bindings.softmax_forward(X.ptr, out.ptr, m, n)
+    out._prev = (X,)
+
+    def _backward():
+        bindings.softmax_backward(out.ptr, out.grad, X.grad, m, n)
+
+    out._backward = _backward
+    return out
+
+
+def self_attention(X, Wq, Wk, Wv, batch, seq_len, d_model):
+    """Single-head scaled dot-product self-attention, no causal mask.
+
+    Scope note: this attends bidirectionally over a small fixed context
+    window that predicts a single next token -- it is NOT yet the causal,
+    arbitrary-length self-attention a full autoregressive transformer needs
+    (see architecture/attention/README.md). That's real follow-up work; this
+    is deliberately the simpler, gradient-checkable first step.
+
+    X: Tensor (batch*seq_len, d_model), rows ordered batch-major (all
+       positions of example 0, then example 1, ...) -- the same order
+       embedding() + concat_last_dim() already produce.
+    Wq, Wk, Wv: Tensor (d_model, d_model) parameters. Single head, so
+       d_head == d_model -- no separate head-splitting yet.
+    Returns: Tensor (batch*seq_len, d_model), same flat layout as X.
+    """
+    n = seq_len
+    scale = 1.0 / math.sqrt(d_model)
+
+    Q = matmul(X, Wq)
+    K = matmul(X, Wk)
+    V = matmul(X, Wv)
+
+    scores = Tensor((batch * n, n))
+    bindings.batched_matmul_forward(Q.ptr, K.ptr, scores.ptr, batch, n, d_model, n, 1)
+    for i in range(scores.n):
+        scores.ptr[i] *= scale
+
+    probs = Tensor((batch * n, n))
+    bindings.softmax_forward(scores.ptr, probs.ptr, batch * n, n)
+
+    attended = Tensor((batch * n, d_model))
+    bindings.batched_matmul_forward(probs.ptr, V.ptr, attended.ptr, batch, n, n, d_model, 0)
+
+    attended._prev = (Q, K, V)
+
+    def _backward():
+        d_probs = bindings.alloc(batch * n * n)
+        bindings.batched_matmul_backward(probs.ptr, V.ptr, attended.grad,
+                                          d_probs, V.grad, batch, n, n, d_model, 0)
+
+        d_scores = bindings.alloc(batch * n * n)
+        bindings.softmax_backward(probs.ptr, d_probs, d_scores, batch * n, n)
+        bindings.free(d_probs)
+
+        for i in range(batch * n * n):
+            d_scores[i] *= scale
+
+        bindings.batched_matmul_backward(Q.ptr, K.ptr, d_scores, Q.grad, K.grad,
+                                          batch, n, d_model, n, 1)
+        bindings.free(d_scores)
+
+    attended._backward = _backward
+    return attended
 
 
 class SGD:

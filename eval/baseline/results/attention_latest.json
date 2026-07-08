@@ -1,0 +1,87 @@
+{
+  "model": "CharAttn",
+  "config": {
+    "context_size": 3,
+    "embed_dim": 16,
+    "hidden": 64,
+    "epochs": 600,
+    "lr": 0.1,
+    "seed": 0,
+    "val_fraction": 0.2,
+    "eval_every": 50
+  },
+  "vocab_size": 28,
+  "train_pairs": 988,
+  "val_pairs": 220,
+  "final_train_loss": 2.605146646499634,
+  "final_val_loss": 2.7503843307495117,
+  "val_perplexity": 15.648644984060132,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 3.3188316822052,
+      "val_loss": 3.323601484298706
+    },
+    {
+      "epoch": 50,
+      "train_loss": 3.0284783840179443,
+      "val_loss": 3.0604991912841797
+    },
+    {
+      "epoch": 100,
+      "train_loss": 2.899907350540161,
+      "val_loss": 2.9435458183288574
+    },
+    {
+      "epoch": 150,
+      "train_loss": 2.8459432125091553,
+      "val_loss": 2.892559289932251
+    },
+    {
+      "epoch": 200,
+      "train_loss": 2.8038711547851562,
+      "val_loss": 2.8563802242279053
+    },
+    {
+      "epoch": 250,
+      "train_loss": 2.7679309844970703,
+      "val_loss": 2.831078052520752
+    },
+    {
+      "epoch": 300,
+      "train_loss": 2.73809552192688,
+      "val_loss": 2.8135039806365967
+    },
+    {
+      "epoch": 350,
+      "train_loss": 2.7123866081237793,
+      "val_loss": 2.8004770278930664
+    },
+    {
+      "epoch": 400,
+      "train_loss": 2.6892523765563965,
+      "val_loss": 2.788482666015625
+    },
+    {
+      "epoch": 450,
+      "train_loss": 2.667794942855835,
+      "val_loss": 2.7783572673797607
+    },
+    {
+      "epoch": 500,
+      "train_loss": 2.6472060680389404,
+      "val_loss": 2.7692127227783203
+    },
+    {
+      "epoch": 550,
+      "train_loss": 2.626580238342285,
+      "val_loss": 2.7600996494293213
+    },
+    {
+      "epoch": 600,
+      "train_loss": 2.605146646499634,
+      "val_loss": 2.7503843307495117
+    }
+  ],
+  "timestamp": "2026-07-07T21:18:49"
+}

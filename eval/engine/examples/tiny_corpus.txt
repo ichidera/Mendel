@@ -1,5 +1,0 @@
-mendel is a small model that learns to think plan and act
-mendel is built from raw math not from a borrowed framework
-a small model can still learn real patterns in real text
-mendel learns one character at a time from what came before
-the goal is capability density not just raw parameter count

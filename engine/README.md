@@ -32,7 +32,11 @@ engine/
 ├── Makefile              # builds libmendel.so
 ├── python/
 │   ├── bindings.py       # ctypes signatures — no logic, just types
-│   └── core.py           # Tensor, autograd graph, ops, SGD optimizer
+│   └── mendel_core.py    # Tensor, autograd graph, ops, SGD optimizer
+│                          # (renamed from core.py — see docs/decisions/0004-core-module-rename.md;
+│                          #  a bare "core" module name collided with something else once this
+│                          #  repo was merged into a larger tree. Import it as
+│                          #  `import mendel_core as core` elsewhere, not `import core`.)
 ├── tests/
 │   └── test_gradients.py # numerical gradient check — run this before trusting anything
 └── examples/

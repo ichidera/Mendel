@@ -43,4 +43,26 @@ void embedding_backward(float* dTable, const int* idx, const float* dOut,
 /* param(n) -= lr * grad(n), in place */
 void sgd_step(float* param, const float* grad, float lr, int n);
 
+/* ---- attention primitives ----
+ * Batched matmul: per batch element b, out[b] = A[b] @ (transpose_b ? B[b]^T : B[b]).
+ * A[b] is (m,k). If transpose_b: B[b] is (n,k) (e.g. K in attention, transposed
+ * on the fly rather than materializing a transpose). Else B[b] is (k,n).
+ * out[b] is (m,n). Used for Q@K^T (transpose_b=1) and attn_weights@V (transpose_b=0). */
+void batched_matmul_forward(const float* A, const float* B, float* out,
+                             int batch, int m, int k, int n, int transpose_b);
+
+/* dA, dB accumulate (+=). dB's shape matches B's original (pre-transpose) shape. */
+void batched_matmul_backward(const float* A, const float* B, const float* dOut,
+                              float* dA, float* dB,
+                              int batch, int m, int k, int n, int transpose_b);
+
+/* Plain row-wise softmax, no labels/loss involved -- used inside attention to
+ * turn scores into weights. (softmax_cross_entropy_forward is a separate,
+ * fused op for the final loss; this is the general-purpose version.) */
+void softmax_forward(const float* X, float* out, int m, int n);
+
+/* dIn accumulates (+=). Standard softmax Jacobian-vector product per row:
+ * dIn[i,j] = probs[i,j] * (dOut[i,j] - sum_k dOut[i,k] * probs[i,k]) */
+void softmax_backward(const float* probs, const float* dOut, float* dIn, int m, int n);
+
 #endif

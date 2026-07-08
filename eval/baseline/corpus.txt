@@ -1,0 +1,20 @@
+mendel is a small model that learns to think plan and act
+mendel is built from raw math not from a borrowed framework
+a small model can still learn real patterns in real text
+mendel learns one character at a time from what came before
+the goal is capability density not just raw parameter count
+distillation lets a small model inherit judgment from a larger one
+quantization shrinks weights without losing too much capability
+retrieval keeps facts out of the weights and looks them up instead
+mixture of experts stores more knowledge than it runs per token
+an agent plans a goal then acts then checks the result
+tool use means calling the right function with the right arguments
+a skill is a loadable procedure the model follows for a task
+the engine is written in raw c with a thin python layer on top
+every backward pass is checked against a numerical gradient first
+a good eval catches a regression before it ever ships
+capability and size are not the same axis in this project
+mendel aims to run on hardware people already own
+the mission is thinking planning tool use skills and control
+a lightweight model can still be a capable model
+open source means anyone can run modify and redistribute this work
