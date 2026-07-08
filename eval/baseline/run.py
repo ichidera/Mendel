@@ -80,6 +80,11 @@ def run_baseline(config: BaselineConfig, verbose=True):
     final_val_loss = history[-1]["val_loss"]
     val_perplexity = math.exp(final_val_loss)
 
+    best_checkpoint = min(history, key=lambda h: h["val_loss"])
+    best_val_loss = best_checkpoint["val_loss"]
+    best_val_epoch = best_checkpoint["epoch"]
+    best_val_perplexity = math.exp(best_val_loss)
+
     return {
         "config": config.as_dict(),
         "vocab_size": len(vocab),
@@ -88,6 +93,9 @@ def run_baseline(config: BaselineConfig, verbose=True):
         "final_train_loss": final_train_loss,
         "final_val_loss": final_val_loss,
         "val_perplexity": val_perplexity,
+        "best_val_loss": best_val_loss,
+        "best_val_epoch": best_val_epoch,
+        "best_val_perplexity": best_val_perplexity,
         "history": history,
     }
 
@@ -99,6 +107,8 @@ def main():
     print(f"\nfinal train loss: {metrics['final_train_loss']:.4f}")
     print(f"final val loss:   {metrics['final_val_loss']:.4f}")
     print(f"val perplexity:   {metrics['val_perplexity']:.4f}")
+    print(f"\nbest val loss:    {metrics['best_val_loss']:.4f}  (epoch {metrics['best_val_epoch']})")
+    print(f"best val perplexity: {metrics['best_val_perplexity']:.4f}")
 
     results_dir = os.path.join(os.path.dirname(__file__), "results")
     os.makedirs(results_dir, exist_ok=True)

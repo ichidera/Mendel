@@ -75,6 +75,11 @@ def run_attention(config: BaselineConfig, verbose=True):
     final_val_loss = history[-1]["val_loss"]
     val_perplexity = math.exp(final_val_loss)
 
+    best_checkpoint = min(history, key=lambda h: h["val_loss"])
+    best_val_loss = best_checkpoint["val_loss"]
+    best_val_epoch = best_checkpoint["epoch"]
+    best_val_perplexity = math.exp(best_val_loss)
+
     return {
         "model": "CharAttn",
         "config": config.as_dict(),
@@ -84,6 +89,9 @@ def run_attention(config: BaselineConfig, verbose=True):
         "final_train_loss": final_train_loss,
         "final_val_loss": final_val_loss,
         "val_perplexity": val_perplexity,
+        "best_val_loss": best_val_loss,
+        "best_val_epoch": best_val_epoch,
+        "best_val_perplexity": best_val_perplexity,
         "history": history,
     }
 
@@ -95,16 +103,18 @@ def main():
     print(f"\nfinal train loss: {metrics['final_train_loss']:.4f}")
     print(f"final val loss:   {metrics['final_val_loss']:.4f}")
     print(f"val perplexity:   {metrics['val_perplexity']:.4f}")
+    print(f"\nbest val loss:    {metrics['best_val_loss']:.4f}  (epoch {metrics['best_val_epoch']})")
+    print(f"best val perplexity: {metrics['best_val_perplexity']:.4f}")
 
     with open(os.path.join(os.path.dirname(__file__), "results", "baseline.json")) as f:
         baseline = json.load(f)
 
-    print(f"\n--- comparison vs. CharMLP baseline ---")
-    print(f"CharMLP  val loss: {baseline['final_val_loss']:.4f}  "
-          f"(perplexity {baseline['val_perplexity']:.4f})")
-    print(f"CharAttn val loss: {metrics['final_val_loss']:.4f}  "
-          f"(perplexity {metrics['val_perplexity']:.4f})")
-    delta = metrics["final_val_loss"] - baseline["final_val_loss"]
+    print(f"\n--- comparison vs. CharMLP baseline (best epoch each) ---")
+    print(f"CharMLP  best val loss: {baseline['best_val_loss']:.4f}  "
+          f"(epoch {baseline['best_val_epoch']}, perplexity {baseline['best_val_perplexity']:.4f})")
+    print(f"CharAttn best val loss: {metrics['best_val_loss']:.4f}  "
+          f"(epoch {metrics['best_val_epoch']}, perplexity {metrics['best_val_perplexity']:.4f})")
+    delta = metrics["best_val_loss"] - baseline["best_val_loss"]
     verdict = "IMPROVED" if delta < 0 else "REGRESSED" if delta > 0 else "UNCHANGED"
     print(f"delta: {delta:+.4f} nats ({verdict})")
 
